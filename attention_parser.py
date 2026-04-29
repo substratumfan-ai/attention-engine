@@ -2,12 +2,14 @@ import re
 import math
 import csv
 import hashlib
+import os
+import time
 from supabase import create_client, Client
 
 SUPABASE_URL = "https://bvvzbtxeqpzqdwwjabws.supabase.co"
 SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ2dnpidHhlcXB6cWR3d2phYndzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczNjg2NjIsImV4cCI6MjA5Mjk0NDY2Mn0.ZsORzusxgxiLq59rE6n4EcPG13j1VGaTK7Mz0nRZJ6A"
 
-CSV_PATH = "/Users/yevgeniygergi/attention-engine/tweets.csv"
+CSV_PATH = os.path.join(os.path.dirname(__file__), "tweets.csv")
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
@@ -77,7 +79,6 @@ def calculate_tweet_weight(followers, likes, retweets):
 
 
 def parse_tweet(tweet):
-    tickers = extract_tickers(tweet["text"])
     sentiment, sentiment_score = detect_sentiment(tweet["text"])
 
     tweet_hash = make_hash(
@@ -89,14 +90,10 @@ def parse_tweet(tweet):
         "user": tweet["user"],
         "followers": tweet["followers"],
         "text": tweet["text"],
-        "coins": tickers,
+        "coins": extract_tickers(tweet["text"]),
         "sentiment": sentiment,
         "sentiment_score": sentiment_score,
-        "weight": calculate_tweet_weight(
-            tweet["followers"],
-            tweet["likes"],
-            tweet["retweets"]
-        ),
+        "weight": calculate_tweet_weight(tweet["followers"], tweet["likes"], tweet["retweets"]),
         "engagement": {
             "likes": tweet["likes"],
             "retweets": tweet["retweets"]
@@ -225,9 +222,7 @@ def save_to_supabase(parsed_tweets, coin_summary):
     skipped_tweets = 0
 
     for tweet in parsed_tweets:
-        existing = supabase.table("tweets").select("id").eq(
-            "tweet_hash", tweet["tweet_hash"]
-        ).execute()
+        existing = supabase.table("tweets").select("id").eq("tweet_hash", tweet["tweet_hash"]).execute()
 
         if existing.data:
             skipped_tweets += 1
@@ -256,9 +251,7 @@ def save_to_supabase(parsed_tweets, coin_summary):
             }).execute()
 
     for coin in coin_summary:
-        existing_summary = supabase.table("coin_summary").select("id").eq(
-            "ticker", coin["ticker"]
-        ).execute()
+        existing_summary = supabase.table("coin_summary").select("id").eq("ticker", coin["ticker"]).execute()
 
         payload = {
             "ticker": coin["ticker"],
@@ -272,9 +265,7 @@ def save_to_supabase(parsed_tweets, coin_summary):
         }
 
         if existing_summary.data:
-            supabase.table("coin_summary").update(payload).eq(
-                "ticker", coin["ticker"]
-            ).execute()
+            supabase.table("coin_summary").update(payload).eq("ticker", coin["ticker"]).execute()
         else:
             supabase.table("coin_summary").insert(payload).execute()
 
@@ -287,9 +278,7 @@ def save_signals(signals):
     updated_signals = 0
 
     for signal in signals:
-        existing = supabase.table("signals").select("id").eq(
-            "signal_key", signal["signal_key"]
-        ).execute()
+        existing = supabase.table("signals").select("id").eq("signal_key", signal["signal_key"]).execute()
 
         payload = {
             "signal_key": signal["signal_key"],
@@ -305,9 +294,7 @@ def save_signals(signals):
         }
 
         if existing.data:
-            supabase.table("signals").update(payload).eq(
-                "signal_key", signal["signal_key"]
-            ).execute()
+            supabase.table("signals").update(payload).eq("signal_key", signal["signal_key"]).execute()
             updated_signals += 1
         else:
             supabase.table("signals").insert(payload).execute()
@@ -317,7 +304,7 @@ def save_signals(signals):
     print(f"Signals updated: {updated_signals}")
 
 
-if __name__ == "__main__":
+def run_cycle():
     raw_tweets = fetch_tweets()
     parsed = [parse_tweet(tweet) for tweet in raw_tweets]
     parsed = [tweet for tweet in parsed if len(tweet["coins"]) > 0]
@@ -328,4 +315,14 @@ if __name__ == "__main__":
     save_to_supabase(parsed, coin_summary)
     save_signals(signals)
 
-    print("✅ CSV tweet engine completed")
+    print("✅ CSV tweet engine cycle completed")
+
+
+if __name__ == "__main__":
+    while True:
+        try:
+            run_cycle()
+        except Exception as e:
+            print("❌ ERROR:", e)
+
+        time.sleep(60)
