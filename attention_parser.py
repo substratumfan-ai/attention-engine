@@ -4,17 +4,28 @@ import time
 import hashlib
 from supabase import create_client
 
+# =============================
+# SUPABASE CONFIG
+# =============================
 SUPABASE_URL = os.getenv("https://bvvzbtxeqpzqdwwjabws.supabase.co")
 SUPABASE_KEY = os.getenv("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ2dnpidHhlcXB6cWR3d2phYndzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczNjg2NjIsImV4cCI6MjA5Mjk0NDY2Mn0.ZsORzusxgxiLq59rE6n4EcPG13j1VGaTK7Mz0nRZJ6A")
 
+FALLBACK_SUPABASE_URL = "https://bvvzbtxeqpzqdwwjabws.supabase.co"
+FALLBACK_SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ2dnpidHhlcXB6cWR3d2phYndzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczNjg2NjIsImV4cCI6MjA5Mjk0NDY2Mn0.ZsORzusxgxiLq59rE6n4EcPG13j1VGaTK7Mz0nRZJ6A"
+
 if not SUPABASE_URL:
-    raise ValueError("Missing SUPABASE_URL Railway variable")
+    print("⚠️ Railway SUPABASE_URL missing, using fallback")
+    SUPABASE_URL = FALLBACK_SUPABASE_URL
 
 if not SUPABASE_KEY:
-    raise ValueError("Missing SUPABASE_KEY Railway variable")
+    print("⚠️ Railway SUPABASE_KEY missing, using fallback")
+    SUPABASE_KEY = FALLBACK_SUPABASE_KEY
 
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
+# =============================
+# WORDS
+# =============================
 BULLISH_WORDS = [
     "bullish", "send", "sending", "breakout", "long", "buy",
     "buying", "accumulation", "moon", "pump", "strong", "gem",
@@ -26,7 +37,9 @@ BEARISH_WORDS = [
     "weak", "dead", "risk", "avoid"
 ]
 
-
+# =============================
+# HELPERS
+# =============================
 def make_hash(text):
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
