@@ -62,6 +62,8 @@ def fetch_tweets(token):
     try:
         res = requests.get(url, headers=headers, params=params)
         data = res.json()
+        print("Twitter status:", res.status_code)
+        print("Twitter response:", data)
 
         tweets = data.get("tweets", [])
         return tweets
