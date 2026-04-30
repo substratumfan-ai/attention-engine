@@ -10,7 +10,13 @@ from supabase import create_client
 
 SUPABASE_URL = os.getenv("https://bvvzbtxeqpzqdwwjabws.supabase.co")
 SUPABASE_KEY = os.getenv("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ2dnpidHhlcXB6cWR3d2phYndzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczNjg2NjIsImV4cCI6MjA5Mjk0NDY2Mn0.ZsORzusxgxiLq59rE6n4EcPG13j1VGaTK7Mz0nRZJ6A")
-TWITTER_API_KEY = os.getenv("new1_810cb3d65f14407b8108a542758105db")
+TWITTER_API_KEY = os.getenv("TWITTER_API_KEY")
+
+FALLBACK_TWITTER_API_KEY = "new1_810cb3d65f14407b8108a542758105db"
+
+if not TWITTER_API_KEY:
+    print("⚠️ Railway TWITTER_API_KEY missing, using fallback")
+    TWITTER_API_KEY = FALLBACK_TWITTER_API_KEY
 
 FALLBACK_SUPABASE_URL = "https://bvvzbtxeqpzqdwwjabws.supabase.co"
 FALLBACK_SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ2dnpidHhlcXB6cWR3d2phYndzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczNjg2NjIsImV4cCI6MjA5Mjk0NDY2Mn0.ZsORzusxgxiLq59rE6n4EcPG13j1VGaTK7Mz0nRZJ6A"
